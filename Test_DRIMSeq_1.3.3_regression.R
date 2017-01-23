@@ -10,9 +10,12 @@ library(edgeR)
 ##############################################################################
 
 
-rwd <- "/home/gosia/multinomial_project/package_devel/Test_DRIMSeq_1_3_3_regression"
-package_dir <- "/home/gosia/R/package_devel/DRIMSeq"
+# rwd <- "/home/gosia/multinomial_project/package_devel/Test_DRIMSeq_1_3_3_regression"
+# package_dir <- "/home/gosia/R/package_devel/DRIMSeq"
 
+
+rwd <- "/Users/gosia/Dropbox/UZH/package_devel/Test_DRIMSeq_1_3_3_regression"
+package_dir <- "/Users/gosia/Dropbox/UZH/package_devel/DRIMSeq"
 
 
 ##############################################################################
@@ -95,8 +98,10 @@ d[1:20, 1:3]
 ### Filtering
 # Check what is the minimal number of replicates per condition 
 table(samples(d)$group)
+
 d <- dmFilter(d, min_samps_gene_expr = 7, min_samps_feature_expr = 3, 
   min_samps_feature_prop = 0)
+
 
 plotData(d, "./")
 
@@ -109,18 +114,53 @@ load_all(package_dir)
 counts = d@counts
 
 design = as.matrix(model.matrix( ~ group, data = d@samples))
+design
 
 dispersion = 10
-prop_mode = "constrOptimG"
+prop_mode = "constrOptim"
 prop_tol = 1e-12
 verbose = FALSE
 BPPARAM = BiocParallel::SerialParam()
 
 
+y <- counts[[1]]
+coef_mode = "optim"
+coef_tol = 1e-12
+disp = 10
+
+
+dm_fitRegression(y, design, 
+  disp, coef_mode = "optim", coef_tol = 1e-12, verbose = FALSE)
+  
+
+groups <- edgeR::designAsFactor(design)
+groups <- factor(groups, labels = paste0("gr", levels(groups)))
+ngroups <- nlevels(groups)
+lgroups <- levels(groups)
+igroups <- lapply(lgroups, function(gr){which(groups == gr)})
+names(igroups) <- lgroups
+
+
+dm_fitManyGroups(y, ngroups, lgroups, igroups, 
+  disp, prop_mode = "constrOptim", prop_tol = 1e-12, verbose = FALSE)
+
+
 dmDS_fit(counts, design, dispersion,
-  prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, 
+  prop_mode = "constrOptim", prop_tol = 1e-12, verbose = FALSE, 
   BPPARAM = BiocParallel::SerialParam())
 
+
+
+dmDS_estimateCommonDispersion(counts, design, disp_adjust = TRUE, 
+  disp_interval = c(0, 1e+5), disp_tol = 1e-01, prop_mode = "constrOptim", 
+  prop_tol = 1e-12, verbose = FALSE, BPPARAM = BiocParallel::SerialParam())
+  
+# ---------------------------------------------------
+
+b <- b_init
+x <- design
+
+m_Hessian_regG(b, x, y)
 
 
 
@@ -128,9 +168,13 @@ dmDS_fit(counts, design, dispersion,
 
 # ---------------------------------------------------
 
+load_all(package_dir)
+
 
 ### Calculate dispersion
-d <- dmDispersion(d, verbose = 1, BPPARAM = BiocParallel::MulticoreParam(workers = 2))
+d <- dmDispersion(d, design = design, verbose = 1, 
+  BPPARAM = BiocParallel::MulticoreParam(workers = 2))
+
 
 plotDispersion(d, out_dir = "./")
 
@@ -139,11 +183,13 @@ common_dispersion(d)
 head(genewise_dispersion(d))
 
 
+# ---------------------------------------------------
 
 
+load_all(package_dir)
 
 ### Fit full model proportions
-d <- dmFit(d, verbose = 0, BPPARAM = BiocParallel::SerialParam())
+d <- dmFit(d, design = design, verbose = 1, BPPARAM = BiocParallel::SerialParam())
 
 
 head(proportions(d))
@@ -151,8 +197,24 @@ head(statistics(d))
 
 
 
+
+
+# ---------------------------------------------------
+
+
+load_all(package_dir)
+
 ### Fit null model proportions and test for DS
-d <- dmTest(d, verbose = 1, BPPARAM = BiocParallel::SerialParam())
+d <- dmTest(d, coef = 2, verbose = 1, BPPARAM = BiocParallel::SerialParam())
+
+
+d <- dmTest(d, contrast = c(0, -1), verbose = 1, BPPARAM = BiocParallel::SerialParam())
+
+
+dmTwoStageTest(d)
+
+
+
 
 plotTest(d, out_dir = "./")
 

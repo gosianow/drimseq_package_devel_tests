@@ -10,12 +10,12 @@ library(edgeR)
 ##############################################################################
 
 
-# rwd <- "/home/gosia/multinomial_project/package_devel/Test_DRIMSeq_1_3_3_regression"
-# package_dir <- "/home/gosia/R/package_devel/DRIMSeq"
+rwd <- "/home/gosia/multinomial_project/package_devel/Test_DRIMSeq_1_3_3_regression"
+package_dir <- "/home/gosia/R/package_devel/DRIMSeq"
 
 
-rwd <- "/Users/gosia/Dropbox/UZH/package_devel/Test_DRIMSeq_1_3_3_regression"
-package_dir <- "/Users/gosia/Dropbox/UZH/package_devel/DRIMSeq"
+# rwd <- "/Users/gosia/Dropbox/UZH/package_devel/Test_DRIMSeq_1_3_3_regression"
+# package_dir <- "/Users/gosia/Dropbox/UZH/package_devel/DRIMSeq"
 
 
 ##############################################################################

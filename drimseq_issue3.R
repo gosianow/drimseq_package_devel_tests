@@ -1,3 +1,7 @@
+library(devtools)
+load_all("/Users/gosia/Dropbox/UZH/package_devel/DRIMSeq")
+
+
 ### Load libraries
 library('DRIMSeq')
 library('PasillaTranscriptExpr')
@@ -13,7 +17,6 @@ gene_id_subset <- readLines(file.path(data_dir, "gene_id_subset.txt"))
 ### pasilla_samples design matrix with 3 groups
 # basicly splitting ctrl into two
 
-pasilla_samples <- data.frame(sample_id = pasilla_metadata$SampleName, group = pasilla_metadata$condition)
 
 pasilla_samples <- data.frame(sample_id = pasilla_metadata$SampleName, group = c('Nr1','Nr1','Nr2','Nr3','Nr3','Nr3','Nr2'))
 
@@ -25,7 +28,6 @@ d <- dmDSdata(counts = pasilla_counts, samples = pasilla_samples)
 d <- d[names(d) %in% gene_id_subset, ]
 ### Filtering
 d <- dmFilter(d, min_samps_gene_expr = 7, min_samps_feature_expr = 3, min_gene_expr = 10, min_feature_expr = 10)
-
 
 
 ## Create the design matrix without intercept due to no clear 'ground state'
@@ -48,13 +50,17 @@ contrast1 <- c(-1, 1, 0)
 
 t21 <- dmTest(d2, contrast = contrast1, verbose = TRUE)
 
+t21@design_fit_null
+
 results(t21)
 
 
 
 contrast2 <- c(-1, 0, 1)
 
-t22 <- dmTest(d2, contrast = contrast2, verbose = TRUE)
+t22 <- dmTest(d2, contrast = contrast2, one_way = FALSE, verbose = TRUE)
+
+t22@design_fit_null
 
 results(t22)
 
@@ -62,16 +68,32 @@ results(t22)
 
 contrast3 <- c(0, -1, 1)
 
-t23 <- dmTest(d2, contrast = contrast3, verbose = TRUE)
+t23 <- dmTest(d2, contrast = contrast3, one_way = FALSE, verbose = TRUE)
+
+t23@design_fit_null
 
 results(t23)
 
 
 
 
-## Create the design matrix with intercept
 
-design_full1 <- model.matrix(~ group, data = pasilla_samples)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
